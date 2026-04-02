@@ -1,1 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Roblox Badge Date Finder</title>
+</head>
+<body>
+  <h2>Roblox Game Join Badge Date Finder</h2>
+  <p id="result">Loading...</p>
 
+  <script>
+    async function checkBadge() {
+      const params = new URLSearchParams(window.location.search);
+      const username = params.get("username");
+      const resultEl = document.getElementById("result");
+
+      if(!username) {
+        resultEl.innerText = "Add ?username=USERNAME to the URL";
+        return;
+      }
+
+      try {
+        // Step 1: Get User ID
+        const userRes = await fetch(`https://api.roblox.com/users/get-by-username?username=${username}`);
+        const userData = await userRes.json();
+        if(userData.Id === 0) {
+          resultEl.innerText = "User not found";
+          return;
+        }
+        const userId = userData.Id;
+
+        // Step 2: Get badges
+        const badgesRes = await fetch(`https://badges.roblox.com/v1/users/${userId}/badges?limit=100&sortOrder=Asc`);
+        const badgesData = await badgesRes.json();
+
+        // Step 3: Filter for your specific badge
+        const badgeId = 3221720669161306;
+        const badge = badgesData.data.find(b => b.awardId === badgeId);
+
+        if(badge) {
+          const date = new Date(badge.awardedDate);
+          resultEl.innerText = `${username} earned the badge on: ${date.toUTCString()}`;
+        } else {
+          resultEl.innerText = `${username} has not earned this badge.`;
+        }
+
+      } catch(err) {
+        console.error(err);
+        resultEl.innerText = "Error fetching badge data";
+      }
+    }
+
+    checkBadge();
+  </script>
+</body>
+</html>
