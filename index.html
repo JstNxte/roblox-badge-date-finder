@@ -13,22 +13,22 @@
       const username = params.get("username");
       const resultEl = document.getElementById("result");
 
-      if(!username) {
+      if (!username) {
         resultEl.innerText = "Add ?username=USERNAME to the URL";
         return;
       }
 
       try {
-        // Step 1: Get User ID
-        const userRes = await fetch(`https://api.roblox.com/users/get-by-username?username=${username}`);
+        // Step 1: Get User ID using the modern Roblox API
+        const userRes = await fetch(`https://users.roblox.com/v1/users/by-username/${username}`);
         const userData = await userRes.json();
-        if(userData.Id === 0) {
+        if (userData.id === undefined) {
           resultEl.innerText = "User not found";
           return;
         }
-        const userId = userData.Id;
+        const userId = userData.id;
 
-        // Step 2: Get badges
+        // Step 2: Get all badges for the user
         const badgesRes = await fetch(`https://badges.roblox.com/v1/users/${userId}/badges?limit=100&sortOrder=Asc`);
         const badgesData = await badgesRes.json();
 
@@ -36,14 +36,14 @@
         const badgeId = 3221720669161306;
         const badge = badgesData.data.find(b => b.awardId === badgeId);
 
-        if(badge) {
+        if (badge) {
           const date = new Date(badge.awardedDate);
           resultEl.innerText = `${username} earned the badge on: ${date.toUTCString()}`;
         } else {
           resultEl.innerText = `${username} has not earned this badge.`;
         }
 
-      } catch(err) {
+      } catch (err) {
         console.error(err);
         resultEl.innerText = "Error fetching badge data";
       }
